@@ -52,13 +52,13 @@ class AlunoTela(TelaBase):
       matricula = st.text_input("Digite a matrícula do aluno")
       nome = st.text_input("Digite o nome do aluno")
       email = st.text_input("Digite o email do aluno")
-      endereco_id = st.text_input("Digite o ID do endereço do aluno")
+      cep = st.text_input("Digite o CEP do aluno")
       if st.button("Criar aluno"):
         params = {
           "matricula": matricula,
           "nome_aluno": nome,
           "email": email,
-          "endereco_id": int(endereco_id)
+          "cep": cep
         }
         retorno = self.criar(params)
         if retorno.status_code == 200:
