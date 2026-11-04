@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models import Aluno
-from app.schemas import AlunoIn, AlunoUpdateIn
+from app.schemas import AlunoComCepIn, AlunoIn, AlunoOut, AlunoUpdateIn
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, text
 import pandas as pd
@@ -20,26 +20,29 @@ def pegar_dados_alunos(db: Session = Depends(get_db)):
     #query = "SELECT * FROM tb_alunos"
     #df = pd.read_sql(query, engine)
     #return df.to_dict(orient="records")
-    alunos = db.scalars(select(Aluno).order_by(Aluno.id)).all()
-    return alunos
+    return aluno_service.listar_alunos(db)
 
 @router.get("/pegar-dados-alunos-por-id/{id}")
 def pegar_dados_alunos_por_id(id: int, db: Session = Depends(get_db)):
     #query = text("SELECT * FROM tb_alunos WHERE id = :id")
     #df = pd.read_sql(query, engine, params={"id": id})
     #return df.to_dict(orient="records")
-    aluno = db.get(Aluno, id)
-    return aluno
+    return aluno_service.buscar_aluno(db, id)
 
-@router.post("/criar-aluno")
+@router.post("/criar-aluno", response_model=AlunoOut)
 def criar_aluno(aluno: AlunoIn, db: Session = Depends(get_db)):
     # # Transformando dict em df
     # df = pd.DataFrame([aluno.model_dump()])
     # # Insert no banco de dados
     # df.to_sql("tb_alunos", engine, if_exists="append", index=False)
     # return {"mensagem": "Aluno cadastrado com sucesso!"}
-    aluno_service.criar_aluno(db, aluno)
-    return {"mensagem": "Aluno cadastrado com sucesso!"}
+    return aluno_service.criar_aluno(db, aluno)
+
+
+@router.post("/criar-aluno-com-cep", response_model=AlunoOut)
+def criar_aluno_com_cep(aluno: AlunoComCepIn, db: Session = Depends(get_db)):
+    # Recebe matrícula, nome, email e CEP; o service busca o endereço no ViaCEP
+    return aluno_service.criar_com_cep(db, aluno)
 
 @router.put("/atualizar-aluno/{id}")
 def atualizar_aluno(id: int, aluno: AlunoUpdateIn, db: Session = Depends(get_db)):
@@ -57,11 +60,7 @@ def atualizar_aluno(id: int, aluno: AlunoUpdateIn, db: Session = Depends(get_db)
     #     )
     #     conn.commit()
     # return {"mensagem": "aluno atualizado com sucesso"}
-    dados = db.get(Aluno, id)
-    campos = aluno.model_dump(exclude_unset=True)
-    for campo, valor in campos.items():
-        setattr(dados, campo, valor)
-    db.commit()
+    aluno_service.atualizar_aluno(db, id, aluno)
     return {"mensagem": "Aluno atualizado com sucesso!"}
 
 
@@ -72,7 +71,5 @@ def deletar_aluno(id: int, db: Session = Depends(get_db)):
     #     conn.execute(text(query), {"id": id})
     #     conn.commit()
     # return {"mensagem": "Aluno deletado com sucesso!"}
-    dados = db.get(Aluno, id)
-    db.delete(dados)
-    db.commit()
+    aluno_service.deletar_aluno(db, id)
     return {"mensagem": "Aluno deletado com sucesso!"}

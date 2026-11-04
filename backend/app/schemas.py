@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 class EnderecoIn(BaseModel):
     cep:str
     endereco: str
@@ -39,7 +39,20 @@ class AlunoIn(BaseModel):
     matricula: str
     nome_aluno: str
     email: str
-    cep: str  # antes era endereco_id: int
+    endereco_id: int
+
+#schema de saída do aluno
+class AlunoOut(AlunoIn):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
+#schema de entrada para criar aluno usando o CEP (ViaCEP)
+class AlunoComCepIn(BaseModel):
+    matricula: str = Field(min_length=1, max_length=20)
+    nome_aluno: str = Field(min_length=1, max_length=255)
+    email: str = Field(min_length=3, max_length=100)
+    cep: str
 
 
 #schema de entrada para tb notas

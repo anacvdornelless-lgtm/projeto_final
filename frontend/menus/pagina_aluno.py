@@ -21,7 +21,7 @@ class AlunoTela(TelaBase):
       return dados
 
   def criar(self, params):
-    endpoint = "/alunos/criar-aluno"
+    endpoint = "/alunos/criar-aluno-com-cep"
     return self.base.post(endpoint, params)
 
   def atualizar(self, id, params):
