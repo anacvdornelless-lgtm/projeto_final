@@ -19,31 +19,40 @@ projeto_final/
 ### Como funciona
 
 ```
-Front (CEP digitado)
+Front (matrícula, nome, email, CEP)
    ↓
-routers/alunos.py           → recebe a requisição e chama o service
+schemas.py                  → valida a entrada (matrícula até 20 caracteres, CEP com 8 números)
    ↓
-services/aluno_service.py   → buscar_cep: chama https://viacep.com.br/ws/{cep}/json/
-                              criar_aluno: salva o endereço (se o CEP ainda não existe) e o aluno
+routers/alunos.py           → rota criar-aluno, chama o aluno_service
+   ↓
+services/aluno_service.py   → chama o cep_service, cadastra o endereço e depois o aluno
+   ↓
+services/cep_service.py     → manda o CEP para https://viacep.com.br/ws/{cep}/json/ e devolve o endereço
+   ↓
+Banco (tb_enderecos e tb_alunos)
 ```
 
-O banco **não mudou**: `tb_alunos` continua com `endereco_id`. Só mudou o que o usuário digita (o CEP). Por isso não foi preciso criar migration nova.
+- **Schema:** valida o que entra antes de chegar na rota.
+- **Router:** recebe a requisição e chama o service.
+- **Service:** é onde fica a lógica do back-end (aqui, consultar uma API externa e cadastrar).
+- **Models:** não mudou. O banco continua igual, por isso não foi preciso criar migration.
 
-Se dois alunos têm o mesmo CEP, eles usam o mesmo endereço.
+O CEP é único em `tb_enderecos`: **use um CEP diferente para cada aluno**.
 
 ### Onde mexemos
 
 | Arquivo | O que mudou |
 |---|---|
 | `backend/pyproject.toml` | Adicionada a biblioteca `requests` (para chamar a API) |
-| `backend/app/schemas.py` | No `AlunoIn`, `endereco_id: int` virou `cep: str` |
-| `backend/app/services/aluno_service.py` | **Novo.** `buscar_cep` (chama o ViaCEP) e `criar_aluno` |
+| `backend/app/schemas.py` | No `AlunoIn`, `endereco_id: int` virou `cep: str`, com validação (8 números) e matrícula com no máximo 20 caracteres |
+| `backend/app/services/cep_service.py` | **Novo.** `buscar_cep`: chama o ViaCEP e devolve o endereço |
+| `backend/app/services/aluno_service.py` | **Novo.** `criar_aluno`: usa o `cep_service`, cadastra o endereço e o aluno |
 | `backend/app/routers/alunos.py` | A rota `criar-aluno` só chama `aluno_service.criar_aluno` |
 | `frontend/menus/pagina_aluno.py` | Na tela "Criar Aluno", o campo "ID do endereço" virou "CEP" |
 
 O resto (endereços, disciplinas, notas, atualizar aluno) continua igual.
 
-> Digite o CEP só com números (ex: `01001000`).
+> Digite o CEP só com números (ex: `01001000`). Com hífen, o schema recusa (erro 422).
 
 ---
 
