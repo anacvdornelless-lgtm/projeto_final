@@ -51,16 +51,7 @@ schemas.py (AlunoOut)        → formato da resposta
 | `backend/app/routers/alunos.py` | Todas as rotas chamam o `aluno_service`; nova rota `POST /alunos/criar-aluno-com-cep` |
 | `frontend/menus/pagina_aluno.py` | A tela "Criar Aluno" pede o CEP e chama `/alunos/criar-aluno-com-cep` |
 
-### Erros tratados
-
-| Situação | Resposta |
-|---|---|
-| CEP que não existe ou ViaCEP fora do ar | 502: "Não foi possível consultar o CEP" |
-| Matrícula com mais de 20 caracteres, nome vazio, e-mail curto | 422 (validação do schema) |
-| Aluno não encontrado (buscar, atualizar, deletar) | 404 |
-| `criar-aluno` com `endereco_id` que não existe | 404: "Endereço não encontrado" |
-
----
+#
 
 ## Como clonar e rodar em outro computador
 
@@ -146,3 +137,45 @@ ORDER BY a.id;
 O aluno novo tem que aparecer com rua, bairro e cidade preenchidos, mesmo que você só tenha digitado o CEP.
 
 > Se a tabela não atualizar no DBeaver, clique com o botão direito nela e escolha **Refresh** (ou aperte F5).
+Leia meu projeto no GitHub antes de responder:
+https://github.com/anacvdornelless-lgtm/projeto_final
+Referência (pasta backend/app): models.py, schemas.py, services/aluno_service.py,
+services/cep_service.py, routers/alunos.py e main.py.
+Siga exatamente esse estilo (SQLAlchemy 2.0 com Mapped/mapped_column, prefixo tb_,
+services com a lógica, routers só chamando o service) e NÃO recrie o que já existe.
+
+ENUNCIADO DA PROVA:
+[cole aqui o enunciado]
+
+Anexei a foto do meu desenho das tabelas. Siga o desenho: nomes, colunas, FKs e relações.
+
+TABELAS QUE JÁ EXISTEM NO MEU models.py (não recriar, só usar como destino de FK):
+[liste, ex.: Endereco (tb_enderecos), Disciplina (tb_disciplinas), Aluno (tb_alunos)]
+
+ENTIDADE PRINCIPAL DO CADASTRO: [ex.: Funcionario]
+- Campos que a rota recebe: [ex.: nome_funcionario e cep]
+- Rota: [ex.: POST /criar-funcionario]
+- [Se houver CEP: usar cep_service.consultar_cep, reaproveitar o Endereco se o CEP já existir
+  (senão criar, incluindo regiao), db.flush() para gerar o id e só então criar a entidade,
+  depois db.commit() e db.refresh().]
+- [Se NÃO houver CEP: o service valida as FKs recebidas (db.get na tabela de destino e 404 se
+  não existir), cria a entidade, db.commit() e db.refresh().]
+
+GERE NESTA ORDEM, cada item em um bloco separado, só o que for NOVO:
+1. models.py: classes novas para eu colar no final do arquivo (sem repetir imports).
+2. schemas.py: schema de entrada (com Field de tamanho, igual ao AlunoComCepIn) e de saída
+   (ConfigDict from_attributes).
+3. services/[nome]_service.py: no mesmo estilo do aluno_service.
+4. routers/[nome].py: o router só chama o service.
+5. A linha do main.py que inclui o novo router.
+6. Comandos do Alembic: revision --autogenerate e upgrade head.
+
+REGRAS DE MODELAGEM:
+- Relação 1:N: a FK fica no lado "N".
+- Relação N:N: tabela associativa com id (PK) e as duas FKs.
+- Dado que depende do par (nota, salário, data, valor...) fica na tabela associativa.
+- O nome dentro do ForeignKey deve ser igual ao __tablename__ da outra classe.
+- Tipos: texto String(255), decimais Float, datas Date, ids int.
+- Se alguma relação do desenho estiver ambígua, escolha a mais simples e me diga em uma frase.
+
+FORMATO DA RESPOSTA: só código e uma frase curta por arquivo. Não repita classes existentes.
